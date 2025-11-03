@@ -1,0 +1,99 @@
+#Code
+
+CREATE DATABASE OnlineFoodOrdering;
+USE OnlineFoodOrdering;
+CREATE TABLE Customer (
+  CustomerID INT PRIMARY KEY AUTO_INCREMENT,
+  Name VARCHAR(50),
+  Email VARCHAR(50) UNIQUE,
+  Phone VARCHAR(15),
+  Address VARCHAR(100)
+);
+
+CREATE TABLE Restaurant (
+  RestaurantID INT PRIMARY KEY AUTO_INCREMENT,
+  Name VARCHAR(50),
+  Location VARCHAR(100)
+);
+
+CREATE TABLE MenuItem (
+  ItemID INT PRIMARY KEY AUTO_INCREMENT,
+  ItemName VARCHAR(50),
+  Price DECIMAL(8,2),
+  RestaurantID INT,
+  FOREIGN KEY (RestaurantID) REFERENCES Restaurant(RestaurantID)
+);
+
+CREATE TABLE Orders (
+  OrderID INT PRIMARY KEY AUTO_INCREMENT,
+  CustomerID INT,
+  OrderDate DATE,
+  TotalAmount DECIMAL(10,2),
+  Status VARCHAR(20),
+  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID)
+);
+
+CREATE TABLE OrderDetails (
+  OrderDetailID INT PRIMARY KEY AUTO_INCREMENT,
+  OrderID INT,
+  ItemID INT,
+  Quantity INT CHECK (Quantity > 0),
+  FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+  FOREIGN KEY (ItemID) REFERENCES MenuItem(ItemID)
+);
+
+CREATE TABLE Payment (
+  PaymentID INT PRIMARY KEY AUTO_INCREMENT,
+  OrderID INT,
+  Amount DECIMAL(10,2),
+  Mode VARCHAR(20) CHECK (Mode IN ('Cash', 'Card', 'UPI')),
+  PaymentStatus VARCHAR(20),
+  FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+INSERT INTO Customer (Name, Email, Phone, Address) VALUES
+('Shivansh Sharma', 'Shivansh@gmail.com', '9876543210', 'Delhi'),
+('Vikita Kumari', 'Vikita@gmail.com', '9998887777', 'Mumbai');
+
+INSERT INTO Restaurant (Name, Location) VALUES
+('Pizza Palace', 'Delhi'),
+('Burger Hub', 'Mumbai');
+
+INSERT INTO MenuItem (ItemName, Price, RestaurantID) VALUES
+('Cheese Pizza', 250, 1),
+('Veg Burger', 120, 2),
+('Pasta', 180, 1);
+
+INSERT INTO Orders (CustomerID, OrderDate, TotalAmount, Status) VALUES
+(1, '2025-10-23', 430, 'Delivered'),
+(2, '2025-10-23', 120, 'Pending');
+
+INSERT INTO OrderDetails (OrderID, ItemID, Quantity) VALUES
+(1, 1, 1),
+(1, 3, 1),
+(2, 2, 1);
+
+INSERT INTO Payment (OrderID, Amount, Mode, PaymentStatus) VALUES
+(1, 430, 'Card', 'Successful'),
+(2, 120, 'UPI', 'Pending');
+describe table Orders;
+select*from Payment;
+ select*from OrderDetails;
+SELECT * FROM Customer;
+SELECT O.OrderID, C.Name AS CustomerName, O.OrderDate, O.TotalAmount, O.Status
+FROM Orders O
+JOIN Customer C ON O.CustomerID = C.CustomerID;
+SELECT C.Name, M.ItemName, OD.Quantity
+FROM OrderDetails OD
+JOIN Orders O ON OD.OrderID = O.OrderID
+JOIN Customer C ON O.CustomerID = C.CustomerID
+JOIN MenuItem M ON OD.ItemID = M.ItemID
+WHERE C.Name = 'Shivansh Sharma';
+SELECT SUM(TotalAmount) AS Total_Revenue
+FROM Orders
+WHERE Status = 'Delivered';
+CREATE VIEW PendingPayments AS
+SELECT C.Name, O.OrderID, P.Amount, P.PaymentStatus
+FROM Payment P
+JOIN Orders O ON P.OrderID = O.OrderID
+JOIN Customer C ON O.CustomerID = C.CustomerID
+WHERE P.PaymentStatus = 'Pending';
